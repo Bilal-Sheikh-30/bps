@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creator: <%= userProfile.username %></title>
+</head>
+<body>
+    <h1>Creator Profile</h1>
+
+    <!-- User Details -->
+    <div>
+        <h2>Creator Information</h2>
+        <p><strong>Username:</strong> <%= userProfile.username %></p>
+        <p><strong>First Name:</strong> <%= creatorProfile.fname %></p>
+        <p><strong>Last Name:</strong> <%= creatorProfile.lname %></p>
+        <p><strong>Email:</strong> <%= creatorProfile.email %></p>
+        <p><strong>Likes Count:</strong> <%= creatorProfile.likesCount %></p>
+        <p><strong>Clicks Count:</strong> <%= creatorProfile.clicksCount %></p>
+        <p><strong>Blogs Count:</strong> <%= creatorProfile.blogsCount %></p>
+    </div>
+
+    <!-- Blogs Section -->
+    <div>
+        <h2>Blogs</h2>
+        <% if (fullBlog.length > 0) { %>
+            <% fullBlog.forEach(blog => { %>
+                <div style="border: 1px solid #ccc; margin-bottom: 10px; padding: 10px;">
+                    <p><strong>Title:</strong> <%= blog.blog_material.title %></p>
+                    <p><strong>Category:</strong> <%= blog.inst.category %></p>
+                    <% if (blog.blog_material.imageURL && blog.blog_material.imageURL !== 'no image') { %>
+                        <p><strong>Image:</strong></p>
+                        <img src="<%= blog.blog_material.imageURL %>" alt="Blog Image" style="max-width: 200px; height: auto;">
+                    <% } else { %>
+                        <p><strong>Image:</strong> No Image Available</p>
+                    <% } %>
+                    <a href="/bps/read/<%= blog.inst._id %>">Read Here ---> </a>
+                </div>
+            <% }); %>
+        <% } else { %>
+            <p>No blogs available.</p>
+        <% } %>
+    </div>
+</body>
+</html>

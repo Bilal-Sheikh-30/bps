@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - BPS</title>
+    <link rel="stylesheet" href="../home.css">
+</head>
+
+<body>
+    <h3>Home</h3>
+    <a href="/user/become-creator" id="creator-btn"> Become a creator </a>
+    <a href="/bps/creator-profile" id="creatorProfile-btn"> Creator Profile </a>
+    <form action="/user/logout" method="post">
+        <button type="submit" id="logout-btn">Logout</button>
+    </form>
+
+    <form action="/bps/filter" method="get">
+        <label for="filter">Filter by:</label>
+        <select name="filter" id="filter">
+            <option value="mostRecent" <%=filter==='mostRecent' ? 'selected' : '' %>>Most Recent</option>
+            <option value="topCreators" <%=filter==='topCreators' ? 'selected' : '' %>>Top Creators</option>
+            <option value="general" <%=filter==='general' ? 'selected' : '' %>>General</option>
+            <option value="sports" <%=filter==='sports' ? 'selected' : '' %>>Sports</option>
+            <option value="finance" <%=filter==='finance' ? 'selected' : '' %>>Finance</option>
+            <option value="technology" <%=filter==='technology' ? 'selected' : '' %>>Technology</option>
+            <option value="health" <%=filter==='health' ? 'selected' : '' %>>Health</option>
+        </select>
+        <button type="submit">Apply</button>
+    </form>
+
+    <% if (fullBlog && fullBlog.length> 0) { %>
+        <div class="blog-list">
+            <% fullBlog.forEach(blog=> { %>
+                <div class="blog-item">
+                    <h4>
+                        <%= blog.blog_material.title %>
+                    </h4>
+                    <p><strong>Category:</strong>
+                        <%= blog.inst.category %>
+                    </p>
+                    <p><strong>Publish Date:</strong>
+                        <%= new Date(blog.inst.publishDate).toLocaleDateString() %>
+                    </p>
+
+                    <!-- Check if blog has image -->
+                    <% if (blog.blog_material.imageURL && blog.blog_material.imageURL !=='no image' ) { %>
+                        <img src="<%= blog.blog_material.imageURL %>" alt="Blog Image" width="200">
+                        <% } else { %>
+                            <p>No image available</p>
+                            <% } %>
+
+                                <p><strong>Creator:</strong>
+                                    <a href="/bps/get-creator/<%= blog.creator_details._id %>">
+                                        <%= blog.creator_details.fname %>
+                                            <%= blog.creator_details.lname %>
+                                    </a>
+                                </p>
+                                <a href="/bps/read/<%= blog.inst._id %>">Read </a>
+                </div>
+                <% }) %>
+        </div>
+        <% } else { %>
+            <p>No blogs right now</p>
+            <% } %>
+                <script src="../home.js"></script>
+
+</body>
+
+</html>

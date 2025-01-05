@@ -1,0 +1,41 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creator - Profile</title>
+</head>
+<body>
+    <h2>Welcome Creator</h2>
+    <a href="/bps/new-blog">Create New</a>
+</body>
+</html> -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creator - Profile</title>
+</head>
+<body>
+    <h2>Welcome Creator</h2>
+    <a href="/bps/new-blog">Create New</a> 
+    <a href="/bps/creator-private-blogs">See private Blogs</a> 
+
+    <h3>Your Public Blogs</h3>
+    <ul>
+        <% publicBlogs.forEach(blog => { %>
+            <li>
+                <h4><%= blog.title %></h4>
+                <p><%= blog.content %></p>
+                <img src="<%= blog.image %>" alt="<%= blog.title %>" style="max-width: 200px; max-height: 200px;">
+                <p>Category: <%= blog._doc.category %></p>
+                <p>Visibility: <%= blog._doc.visibility %></p>
+                <p>Publish Date: <%= new Date(blog._doc.publishDate).toLocaleDateString() %></p>
+                <a href="/bps/edit-blog/<%= blog._doc._id %>">Edit</a>
+            </li>
+        <% }) %>
+    </ul>
+</body>
+</html>

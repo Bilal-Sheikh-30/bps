@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="../register.css">
+</head>
+<body data-theme="dark">
+    <div class="container">
+        <h2>Register</h2>
+        <i id="theme-icon" class="fa-regular fa-sun theme-toggle" onclick="toggleTheme()"></i>
+        <form action="/user/register" method="post">
+            <label for="username">Username</label>
+            <input type="text" name="username" id="username" required>
+
+            <label for="password">Password</label>
+            <input type="password" name="password" id="password" required>
+
+            <button type="submit" id="submit-btn">Register</button>
+        </form>
+    </div>
+
+    <script src="../register.js"></script>
+</body>
+</html>

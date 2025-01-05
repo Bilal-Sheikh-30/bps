@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Blog</title>
+</head>
+<body>
+    <h2>Create New Blog</h2>
+    <form action="/bps/new-blog" method="post" enctype="multipart/form-data">
+
+        <label for="title">Blog Title:</label>
+        <input type="text" id="title" name="title" required>
+        <br>
+        
+        <label for="content">Blog Content:</label>
+        <textarea id="content" name="content" rows="5" required></textarea>
+        <br>
+        
+        <label for="images">Image</label>
+        <input type="file" id="image" name="image">
+        <br>
+        
+        <label for="category">Category:</label>
+        <select id="category" name="category" required>
+            <option value="general" selected>General</option>
+            <option value="sports">Sports</option>
+            <option value="finance">Finance</option>
+            <option value="technology">Technology</option>
+            <option value="health">Health</option>
+        </select>
+        <br>
+        
+        <label for="keywords">Keywords (separate by commas):</label>
+        <input type="text" id="keywords" name="keywords">
+        <div id="keywords-container"></div>
+        <br>
+        
+        <label for="visibility">Visibility:</label>
+        <select id="visibility" name="visibility">
+            <option value="public" selected>Public</option>
+            <option value="private">Private</option>
+        </select>
+        <br>
+        
+        <button type="submit">Post</button>
+    </form>
+</body>
+</html>

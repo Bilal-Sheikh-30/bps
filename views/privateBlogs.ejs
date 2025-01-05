@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Private Blogs</title>
+</head>
+<body>
+    <h3>Your Private Blogs</h3>
+    <% if (privateBlogs.length > 0) { %>
+    <ul>
+        <% privateBlogs.forEach(blog => { %>
+            <li>
+                <h4><%= blog.title %></h4>
+                <p><%= blog.content %></p>
+                <img src="<%= blog.image %>" alt="<%= blog.title %>" style="max-width: 200px; max-height: 200px;">
+                <p>Category: <%= blog._doc.category %></p>
+                <p>Visibility: <%= blog._doc.visibility %></p>
+                <p>Publish Date: <%= new Date(blog._doc.publishDate).toLocaleDateString() %></p>
+                <a href="/bps/edit-blog/<%= blog._doc._id %>">Edit</a>
+            </li>
+        <% }) %>
+    </ul>
+    <% }else { %>
+        <p>you have no private blogs.</p>
+    <% } %>
+</body>
+</html>
