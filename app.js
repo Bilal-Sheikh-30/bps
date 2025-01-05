@@ -25,6 +25,12 @@ app.use('/user', userRoutes);
 app.use('/bps', bpsRoutes);
 
 
-app.listen(3000, (req, res) =>{
-    console.log('server is running on 3000');
+// app.listen(3000, (req, res) =>{
+//     console.log('server is running on 3000');
+// });
+
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
 });
