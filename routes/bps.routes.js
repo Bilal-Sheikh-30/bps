@@ -6,9 +6,17 @@ const { clicksInst, likesInst } = require('../models/engagement.model');
 const { auth: authorization, isCreator } = require('../middlewares/auth');
 const multer = require('multer');
 
-const upload = multer({ dest: 'uploads/' });
+// const upload = multer({ dest: 'uploads/' });
 const cloudinary = require('../config/cloudinaryConfig');
 const fs = require('fs');
+
+
+
+const streamifier = require('streamifier');
+
+// Use multer memory storage to hold the file in memory
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 
 
 // const path = require('path');
@@ -231,6 +239,7 @@ router.get('/new-blog', authorization, isCreator, (req, res) => {
     res.render('newBlog');
 });
 
+// multer storage wala
 router.post('/new-blog', authorization, isCreator, upload.single('image'), async (req, res) => {
     const { title, content, category, keywords, visibility } = req.body;
     const file = req.file;
@@ -239,49 +248,112 @@ router.post('/new-blog', authorization, isCreator, upload.single('image'), async
         let imageUrl = '';
 
         if (file) {
-            try {
-                const result = await cloudinary.uploader.upload(file.path, {
-                    folder: 'blog_images',
-                });
-                imageUrl = result.secure_url;
-            } catch (uploadError) {
-                console.error("Error uploading to Cloudinary:", uploadError);
-                return res.status(500).json({ error: 'Failed to upload image to Cloudinary.' });
-            }
+            // Convert the buffer (in-memory file) into a stream to upload to Cloudinary
+            const uploadStream = cloudinary.uploader.upload_stream(
+                {
+                    folder: 'blog_images', // Optional folder in Cloudinary
+                },
+                (error, result) => {
+                    if (error) {
+                        console.error("Error uploading to Cloudinary:", error);
+                        return res.status(500).json({ error: 'Failed to upload image to Cloudinary.' });
+                    }
+                    // After upload, get the secure URL from Cloudinary
+                    imageUrl = result.secure_url;
+                    // Continue with creating the blog
+                    createBlog();
+                }
+            );
+
+            // Use streamifier to convert the buffer into a readable stream
+            streamifier.createReadStream(file.buffer).pipe(uploadStream);
         } else {
             imageUrl = 'no image';
+            createBlog();
         }
 
-        const newblogInstance = await blogInstance.create({
-            creatorId: req.user.userId,
-            category,
-            keywords,
-            visibility
-        });
-
-        const newBlog = await blog.create({
-            blogInstanceId: newblogInstance._id,
-            title,
-            content,
-            imageURL: imageUrl
-        });
-        const updatedCreatorProfile = await creator.findOneAndUpdate({ userId: req.user.userId },
-            { $inc: { blogsCount: 1 } },
-            { new: true }
-        );
-
-        if (file) {
-            fs.unlink(file.path, (err) => {
-                if (err) console.error("Error deleting local file:", err);
+        async function createBlog() {
+            const newblogInstance = await blogInstance.create({
+                creatorId: req.user.userId,
+                category,
+                keywords,
+                visibility
             });
-        };
-        res.redirect('/bps/creator-profile')
+
+            const newBlog = await blog.create({
+                blogInstanceId: newblogInstance._id,
+                title,
+                content,
+                imageURL: imageUrl
+            });
+
+            const updatedCreatorProfile = await creator.findOneAndUpdate(
+                { userId: req.user.userId },
+                { $inc: { blogsCount: 1 } },
+                { new: true }
+            );
+
+            res.redirect('/bps/creator-profile');
+        }
 
     } catch (error) {
         return res.status(500).json({ error: 'Failed to upload image or save blog.' });
     }
-
 });
+
+
+// original wala
+// router.post('/new-blog', authorization, isCreator, upload.single('image'), async (req, res) => {
+//     const { title, content, category, keywords, visibility } = req.body;
+//     const file = req.file;
+
+//     try {
+//         let imageUrl = '';
+
+//         if (file) {
+//             try {
+//                 const result = await cloudinary.uploader.upload(file.path, {
+//                     folder: 'blog_images',
+//                 });
+//                 imageUrl = result.secure_url;
+//             } catch (uploadError) {
+//                 console.error("Error uploading to Cloudinary:", uploadError);
+//                 return res.status(500).json({ error: 'Failed to upload image to Cloudinary.' });
+//             }
+//         } else {
+//             imageUrl = 'no image';
+//         }
+
+//         const newblogInstance = await blogInstance.create({
+//             creatorId: req.user.userId,
+//             category,
+//             keywords,
+//             visibility
+//         });
+
+//         const newBlog = await blog.create({
+//             blogInstanceId: newblogInstance._id,
+//             title,
+//             content,
+//             imageURL: imageUrl
+//         });
+//         const updatedCreatorProfile = await creator.findOneAndUpdate({ userId: req.user.userId },
+//             { $inc: { blogsCount: 1 } },
+//             { new: true }
+//         );
+
+//         if (file) {
+//             fs.unlink(file.path, (err) => {
+//                 if (err) console.error("Error deleting local file:", err);
+//             });
+//         };
+//         res.redirect('/bps/creator-profile')
+
+//     } catch (error) {
+//         return res.status(500).json({ error: 'Failed to upload image or save blog.' });
+//     }
+
+// });
 
 
 // router.post('/new-blog', authorization, isCreator, upload.single('image'), async (req, res) => {
