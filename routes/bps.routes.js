@@ -240,6 +240,68 @@ router.get('/new-blog', authorization, isCreator, (req, res) => {
 });
 
 // multer storage wala
+// router.post('/new-blog', authorization, isCreator, upload.single('image'), async (req, res) => {
+//     const { title, content, category, keywords, visibility } = req.body;
+//     const file = req.file;
+
+//     try {
+//         let imageUrl = '';
+
+//         if (file) {
+//             // Convert the buffer (in-memory file) into a stream to upload to Cloudinary
+//             const uploadStream = cloudinary.uploader.upload_stream(
+//                 {
+//                     folder: 'blog_images', // Optional folder in Cloudinary
+//                 },
+//                 (error, result) => {
+//                     if (error) {
+//                         console.error("Error uploading to Cloudinary:", error);
+//                         return res.status(500).json({ error: 'Failed to upload image to Cloudinary.' });
+//                     }
+//                     // After upload, get the secure URL from Cloudinary
+//                     imageUrl = result.secure_url;
+//                     // Continue with creating the blog
+//                     createBlog();
+//                 }
+//             );
+
+//             // Use streamifier to convert the buffer into a readable stream
+//             streamifier.createReadStream(file.buffer).pipe(uploadStream);
+//         } else {
+//             imageUrl = 'no image';
+//             createBlog();
+//         }
+
+//         async function createBlog() {
+//             const newblogInstance = await blogInstance.create({
+//                 creatorId: req.user.userId,
+//                 category,
+//                 keywords,
+//                 visibility
+//             });
+
+//             const newBlog = await blog.create({
+//                 blogInstanceId: newblogInstance._id,
+//                 title,
+//                 content,
+//                 imageURL: imageUrl
+//             });
+
+//             const updatedCreatorProfile = await creator.findOneAndUpdate(
+//                 { userId: req.user.userId },
+//                 { $inc: { blogsCount: 1 } },
+//                 { new: true }
+//             );
+
+//             res.redirect('/bps/creator-profile');
+//         }
+
+//     } catch (error) {
+//         return res.status(500).json({ error: 'Failed to upload image or save blog.' });
+//     }
+// });
+
+
 router.post('/new-blog', authorization, isCreator, upload.single('image'), async (req, res) => {
     const { title, content, category, keywords, visibility } = req.body;
     const file = req.file;
@@ -248,31 +310,39 @@ router.post('/new-blog', authorization, isCreator, upload.single('image'), async
         let imageUrl = '';
 
         if (file) {
-            // Convert the buffer (in-memory file) into a stream to upload to Cloudinary
-            const uploadStream = cloudinary.uploader.upload_stream(
-                {
-                    folder: 'blog_images', // Optional folder in Cloudinary
-                },
-                (error, result) => {
-                    if (error) {
-                        console.error("Error uploading to Cloudinary:", error);
-                        return res.status(500).json({ error: 'Failed to upload image to Cloudinary.' });
+            // Create a new Promise to handle the Cloudinary upload
+            imageUrl = await new Promise((resolve, reject) => {
+                const uploadStream = cloudinary.uploader.upload_stream(
+                    {
+                        folder: 'blog_images', // Optional folder in Cloudinary
+                    },
+                    (error, result) => {
+                        if (error) {
+                            console.error("Error uploading to Cloudinary:", error);
+                            reject('Failed to upload image to Cloudinary.');
+                        } else {
+                            resolve(result.secure_url);
+                        }
                     }
-                    // After upload, get the secure URL from Cloudinary
-                    imageUrl = result.secure_url;
-                    // Continue with creating the blog
-                    createBlog();
-                }
-            );
+                );
 
-            // Use streamifier to convert the buffer into a readable stream
-            streamifier.createReadStream(file.buffer).pipe(uploadStream);
+                // Use streamifier to convert the buffer into a readable stream
+                streamifier.createReadStream(file.buffer).pipe(uploadStream);
+            });
         } else {
             imageUrl = 'no image';
-            createBlog();
         }
 
-        async function createBlog() {
+        // Now, create the blog after the image URL is ready
+        await createBlog(imageUrl);
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: 'Failed to upload image or save blog.' });
+    }
+
+    async function createBlog(imageUrl) {
+        try {
             const newblogInstance = await blogInstance.create({
                 creatorId: req.user.userId,
                 category,
@@ -294,12 +364,13 @@ router.post('/new-blog', authorization, isCreator, upload.single('image'), async
             );
 
             res.redirect('/bps/creator-profile');
+        } catch (err) {
+            console.error('Error creating blog:', err);
+            res.status(500).json({ error: 'Failed to create blog.' });
         }
-
-    } catch (error) {
-        return res.status(500).json({ error: 'Failed to upload image or save blog.' });
     }
 });
+
 
 
 // original wala
