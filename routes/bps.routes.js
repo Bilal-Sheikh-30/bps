@@ -5,10 +5,24 @@ const { user, creator } = require('../models/user.model');
 const { clicksInst, likesInst } = require('../models/engagement.model');
 const { auth: authorization, isCreator } = require('../middlewares/auth');
 const multer = require('multer');
+
 const upload = multer({ dest: 'uploads/' });
 const cloudinary = require('../config/cloudinaryConfig');
 const fs = require('fs');
 
+
+// const path = require('path');
+// // Set up multer to store files temporarily in /tmp (Vercel writable directory)
+// const storage = multer.diskStorage({
+//     destination: function (req, file, cb) {
+//         cb(null, '/tmp');  // Temporary directory allowed by Vercel
+//     },
+//     filename: function (req, file, cb) {
+//         cb(null, Date.now() + path.extname(file.originalname)); // Use a unique filename
+//     },
+// });
+
+// const upload = multer({ storage: storage });
 
 async function getFullBlogs(filter) {
     let instances = '';
@@ -107,10 +121,10 @@ router.get('/get-creator/:creatorId', async (req, res) => {
                 let blog_material = await blog.findOne({ blogInstanceId: inst._id });
                 fullBlog.push({ inst, blog_material });
             }
-            
-            res.render('creatorPage', {creatorProfile, userProfile, fullBlog});
-        }else{
-            res.render('creatorPage', {creatorProfile, userProfile, fullBlog});
+
+            res.render('creatorPage', { creatorProfile, userProfile, fullBlog });
+        } else {
+            res.render('creatorPage', { creatorProfile, userProfile, fullBlog });
         }
     } else {
         res.status(404).json({ 'msg': 'not found' });
@@ -133,23 +147,23 @@ router.get('/read/:blogId', authorization, async (req, res) => {
     });
     if (liked == null) {
         liked = false
-    }else{
+    } else {
         liked = true
     };
-    
-    
+
+
     if (req.user.userId != instance.creatorId && click == null) {
         await clicksInst.create({
             blogInstanceId: instance._id,
             readerId: req.user.userId
         });
-        creatorDetails = await creator.findOneAndUpdate({ userId: instance.creatorId }, { $inc: { clicksCount: 1 } },{ new: true } );
+        creatorDetails = await creator.findOneAndUpdate({ userId: instance.creatorId }, { $inc: { clicksCount: 1 } }, { new: true });
     };
 
     res.render('readBlog', { instance, blogMaterial, creatorDetails, 'liked': liked });
 });
 
-router.get('/do-like/:blogID/:creatorId',authorization, async (req, res)=> {
+router.get('/do-like/:blogID/:creatorId', authorization, async (req, res) => {
     const blogId = req.params.blogID;
     const creatorId = req.params.creatorId;
     const userId = req.user.userId;
@@ -164,17 +178,17 @@ router.get('/do-like/:blogID/:creatorId',authorization, async (req, res)=> {
             blogInstanceId: blogId,
             readerId: userId
         });
-        await creator.findOneAndUpdate({userId: creatorId}, { $inc: { likesCount: 1 } });
-    }else{
+        await creator.findOneAndUpdate({ userId: creatorId }, { $inc: { likesCount: 1 } });
+    } else {
         // do unlike
         await likesInst.findOneAndDelete({
             blogInstanceId: blogId,
             readerId: userId
         });
-        await creator.findOneAndUpdate({userId: creatorId}, { $inc: { likesCount: -1 } });
+        await creator.findOneAndUpdate({ userId: creatorId }, { $inc: { likesCount: -1 } });
     }
     res.redirect(`/bps/read/${blogId}`);
-    
+
 })
 
 // routes for creators
@@ -269,6 +283,68 @@ router.post('/new-blog', authorization, isCreator, upload.single('image'), async
 
 });
 
+
+// router.post('/new-blog', authorization, isCreator, upload.single('image'), async (req, res) => {
+//     const { title, content, category, keywords, visibility } = req.body;
+//     const file = req.file;
+  
+//     try {
+//       let imageUrl = '';
+  
+//       // If a file is uploaded, upload it to Cloudinary
+//       if (file) {
+//         try {
+//           const result = await cloudinary.uploader.upload(file.path, {
+//             folder: 'blog_images',
+//           });
+//           imageUrl = result.secure_url;  // Save Cloudinary image URL
+//         } catch (uploadError) {
+//           console.error("Error uploading to Cloudinary:", uploadError);
+//           return res.status(500).json({ error: 'Failed to upload image to Cloudinary.' });
+//         }
+//       } else {
+//         imageUrl = 'no image';
+//       }
+  
+//       // Create the blog instance
+//       const newblogInstance = await blogInstance.create({
+//         creatorId: req.user.userId,
+//         category,
+//         keywords,
+//         visibility,
+//       });
+  
+//       // Create the blog entry with the image URL
+//       const newBlog = await blog.create({
+//         blogInstanceId: newblogInstance._id,
+//         title,
+//         content,
+//         imageURL: imageUrl,
+//       });
+  
+//       // Update the creator's profile
+//       const updatedCreatorProfile = await creator.findOneAndUpdate(
+//         { userId: req.user.userId },
+//         { $inc: { blogsCount: 1 } },
+//         { new: true }
+//       );
+  
+//       // Delete the temporary file after upload to Cloudinary
+//       if (file) {
+//         fs.unlink(file.path, (err) => {
+//           if (err) console.error("Error deleting local file:", err);
+//         });
+//       }
+  
+//       res.redirect('/bps/creator-profile');
+//     } catch (error) {
+//       console.error("Error:", error);
+//       return res.status(500).json({ error: 'Failed to upload image or save blog.' });
+//     }
+//   });
+
+
+
 router.get('/edit-blog/:blogId', authorization, isCreator, async (req, res) => {
     const requestedBlog = req.params.blogId;
 
@@ -358,7 +434,7 @@ router.get('/delete/:blogId', authorization, isCreator, async (req, res, next) =
         blogInstanceId: requestedBlog
     });
 
-    await creator.findOneAndUpdate({userId: req.user.userId}, { $inc: { blogsCount: -1 } })
+    await creator.findOneAndUpdate({ userId: req.user.userId }, { $inc: { blogsCount: -1 } })
     res.redirect('/bps/creator-profile');
 });
 
