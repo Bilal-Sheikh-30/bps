@@ -7,7 +7,7 @@
 </head>
 <body>
     <h2>Create New Blog</h2>
-    <form action="/bps/new-blog" method="post" enctype="multipart/form-data">
+    <form action="/bps/new-blog" method="post">
 
         <label for="title">Blog Title:</label>
         <input type="text" id="title" name="title" required>
@@ -17,9 +17,9 @@
         <textarea id="content" name="content" rows="5" required></textarea>
         <br>
         
-        <label for="images">Image</label>
+        <!-- <label for="images">Image</label>
         <input type="file" id="image" name="image">
-        <br>
+        <br> -->
         
         <label for="category">Category:</label>
         <select id="category" name="category" required>

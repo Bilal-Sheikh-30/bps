@@ -302,74 +302,74 @@ router.get('/new-blog', authorization, isCreator, (req, res) => {
 // });
 
 
-router.post('/new-blog', authorization, isCreator, upload.single('image'), async (req, res) => {
-    const { title, content, category, keywords, visibility } = req.body;
-    const file = req.file;
+// router.post('/new-blog', authorization, isCreator, upload.single('image'), async (req, res) => {
+//     const { title, content, category, keywords, visibility } = req.body;
+//     const file = req.file;
 
-    try {
-        let imageUrl = '';
+//     try {
+//         let imageUrl = '';
 
-        if (file) {
-            // Create a new Promise to handle the Cloudinary upload
-            imageUrl = await new Promise((resolve, reject) => {
-                const uploadStream = cloudinary.uploader.upload_stream(
-                    {
-                        folder: 'blog_images', // Optional folder in Cloudinary
-                    },
-                    (error, result) => {
-                        if (error) {
-                            console.error("Error uploading to Cloudinary:", error);
-                            reject('Failed to upload image to Cloudinary.');
-                        } else {
-                            resolve(result.secure_url);
-                        }
-                    }
-                );
+//         if (file) {
+//             // Create a new Promise to handle the Cloudinary upload
+//             imageUrl = await new Promise((resolve, reject) => {
+//                 const uploadStream = cloudinary.uploader.upload_stream(
+//                     {
+//                         folder: 'blog_images', // Optional folder in Cloudinary
+//                     },
+//                     (error, result) => {
+//                         if (error) {
+//                             console.error("Error uploading to Cloudinary:", error);
+//                             reject('Failed to upload image to Cloudinary.');
+//                         } else {
+//                             resolve(result.secure_url);
+//                         }
+//                     }
+//                 );
 
-                // Use streamifier to convert the buffer into a readable stream
-                streamifier.createReadStream(file.buffer).pipe(uploadStream);
-            });
-        } else {
-            imageUrl = 'no image';
-        }
+//                 // Use streamifier to convert the buffer into a readable stream
+//                 streamifier.createReadStream(file.buffer).pipe(uploadStream);
+//             });
+//         } else {
+//             imageUrl = 'no image';
+//         }
 
-        // Now, create the blog after the image URL is ready
-        await createBlog(imageUrl);
+//         // Now, create the blog after the image URL is ready
+//         await createBlog(imageUrl);
 
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ error: 'Failed to upload image or save blog.' });
-    }
+//     } catch (error) {
+//         console.error(error);
+//         return res.status(500).json({ error: 'Failed to upload image or save blog.' });
+//     }
 
-    async function createBlog(imageUrl) {
-        try {
-            const newblogInstance = await blogInstance.create({
-                creatorId: req.user.userId,
-                category,
-                keywords,
-                visibility
-            });
+//     async function createBlog(imageUrl) {
+//         try {
+//             const newblogInstance = await blogInstance.create({
+//                 creatorId: req.user.userId,
+//                 category,
+//                 keywords,
+//                 visibility
+//             });
 
-            const newBlog = await blog.create({
-                blogInstanceId: newblogInstance._id,
-                title,
-                content,
-                imageURL: imageUrl
-            });
+//             const newBlog = await blog.create({
+//                 blogInstanceId: newblogInstance._id,
+//                 title,
+//                 content,
+//                 imageURL: imageUrl
+//             });
 
-            const updatedCreatorProfile = await creator.findOneAndUpdate(
-                { userId: req.user.userId },
-                { $inc: { blogsCount: 1 } },
-                { new: true }
-            );
+//             const updatedCreatorProfile = await creator.findOneAndUpdate(
+//                 { userId: req.user.userId },
+//                 { $inc: { blogsCount: 1 } },
+//                 { new: true }
+//             );
 
-            res.redirect('/bps/creator-profile');
-        } catch (err) {
-            console.error('Error creating blog:', err);
-            res.status(500).json({ error: 'Failed to create blog.' });
-        }
-    }
-});
+//             res.redirect('/bps/creator-profile');
+//         } catch (err) {
+//             console.error('Error creating blog:', err);
+//             res.status(500).json({ error: 'Failed to create blog.' });
+//         }
+//     }
+// });
 
 
 
@@ -425,6 +425,43 @@ router.post('/new-blog', authorization, isCreator, upload.single('image'), async
 //     }
 
 // });
+router.post('/new-blog', authorization, isCreator, async (req, res) => {
+    const { title, content, category, keywords, visibility } = req.body;
+
+    try {
+        // Create blog instance
+        const newblogInstance = await blogInstance.create({
+            creatorId: req.user.userId,
+            category,
+            keywords,
+            visibility,
+        });
+        // Create blog
+        const newBlog = await blog.create({
+            blogInstanceId: newblogInstance._id,
+            title,
+            content,
+        });
+
+        // Update creator profile
+        const updatedCreatorProfile = await creator.findOneAndUpdate(
+            { userId: req.user.userId },
+            { $inc: { blogsCount: 1 } },
+            { new: true }
+        );
+        updateCreator = true;
+
+        // Redirect to profile
+        res.redirect('/bps/creator-profile');
+    } catch (error) {
+        console.error('Error:', error.message);
+        return res.status(500).json({
+            error: 'Failed to save blog.',
+            errorMessage: error.message,
+        });
+    }
+});
+
 
 
 // router.post('/new-blog', authorization, isCreator, upload.single('image'), async (req, res) => {
